@@ -116,11 +116,11 @@ class Engine {
 
     // This method finds a random spot where there is no enemy, and puts one in there
     addEnemy() {
-        var enemySpots = GAME_WIDTH / ENEMY_WIDTH;
+        var enemySpots = GAME_HEIGHT / ENEMY_WIDTH;
 
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
-        while (!enemySpot || this.enemies[enemySpot]) {
+        while (!enemySpot && this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
         }
 
@@ -200,12 +200,21 @@ class Engine {
 
     isPlayerDead() {
         // TODO: fix this function!
-        return false;
+        
+        var dead = false;
+        
+        for (var i=0; i<this.enemies.length; i++) {
+            
+            if (this.enemies[i] 
+                && this.player.x === this.enemies[i].x
+                && this.enemies[i].y + ENEMY_HEIGHT - 20 > this.player.y)
+                {
+                    dead = true
+                }
+        }
+        return dead;
     }
 }
-
-
-
 
 
 // This section will start the game
