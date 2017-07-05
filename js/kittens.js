@@ -19,7 +19,7 @@ var MOVE_RIGHT = 'right';
 
 // Preload game images
 var images = {};
-['enemy.png', 'stars.png', 'player.png'].forEach(imgName => {
+['mario.png', 'castle.png', 'Thwomp.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -30,11 +30,12 @@ var images = {};
 
 
 // This section is where you will be doing most of your coding
+
 class Enemy {
     constructor(xPos) {
         this.x = xPos;
         this.y = -ENEMY_HEIGHT;
-        this.sprite = images['enemy.png'];
+        this.sprite = images['Thwomp.png'];
 
         // Each enemy should have a different speed
         this.speed = Math.random() / 2 + 0.25;
@@ -53,7 +54,7 @@ class Player {
     constructor() {
         this.x = 2 * PLAYER_WIDTH;
         this.y = GAME_HEIGHT - PLAYER_HEIGHT - 10;
-        this.sprite = images['player.png'];
+        this.sprite = images['mario.png'];
     }
 
     // This method is called by the game engine when left/right arrows are pressed
@@ -65,7 +66,7 @@ class Player {
             this.x = this.x + PLAYER_WIDTH;
         }
     }
-
+    
     render(ctx) {
         ctx.drawImage(this.sprite, this.x, this.y);
     }
@@ -134,6 +135,7 @@ class Engine {
 
         // Listen for keyboard left/right and update the player
         document.addEventListener('keydown', e => {
+               
             if (e.keyCode === LEFT_ARROW_CODE) {
                 this.player.move(MOVE_LEFT);
             }
@@ -167,7 +169,7 @@ class Engine {
         this.enemies.forEach(enemy => enemy.update(timeDiff));
 
         // Draw everything!
-        this.ctx.drawImage(images['stars.png'], 0, 0); // draw the star bg
+        this.ctx.drawImage(images['castle.png'], 0, 0); // draw the star bg
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.player.render(this.ctx); // draw the player
 
