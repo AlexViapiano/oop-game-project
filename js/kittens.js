@@ -24,7 +24,7 @@ audio.play();
 
 // Preload game images
 var images = {};
-['mario.png', 'castle.png', 'Thwomp.png', 'yoshi_coin.png'].forEach(imgName => {
+['mario.png', 'luigi.png', 'castle.png', 'Thwomp.png', 'yoshi_coin.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -248,7 +248,7 @@ class Engine {
             // If they are dead, then it's game over!
             this.ctx.font = 'bold 30px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText(this.score + ' GAME OVER', 5, 30);
+            this.ctx.fillText("Points :" + this.score, 30, 30);
             this.ctx.fillText('Bowser: Toobad!!!', 5, 150);
             this.ctx.fillText('Hit space bar to try again.', 5, 200);
             document.addEventListener('keydown', e => {
@@ -267,7 +267,7 @@ class Engine {
             // If player is not dead, then draw the score
             this.ctx.font = 'bold 30px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText(this.score, 5, 30);
+            this.ctx.fillText("Points: " + this.score, 30, 30);
 
             // Set the time marker and redraw
             this.lastFrame = Date.now();
@@ -283,6 +283,12 @@ class Engine {
         // Check if hardmore should be enabled
         if (this.hardMode()) {
             MAX_ENEMIES = 4;
+        }
+        
+        //Check if luigi should be unlocked
+        if (this.unlockLuigi()) {
+                this.player.sprite = images['luigi.png'];
+                this.player.render(this.ctx);
         }
         
     }
@@ -322,13 +328,24 @@ class Engine {
     
     hardMode() {
         var increaseDifficulty = false;
-        if (this.score > 1000000 && this.score < 1050000) {
+        if (this.score > 1000000 && this.score < 1020000) {
             var audio = new Audio("bowser_laugh.mp3");
             audio.play();
             increaseDifficulty = true;
         }
         return increaseDifficulty;
     }
+    
+    unlockLuigi() {
+        var unlockedLuigi = false;
+        if (this.score > 2000000 && this.score < 2020000) {
+            var audio = new Audio("luigi_voice.mp3");
+            audio.play();
+            unlockedLuigi = true;
+        }
+        return unlockedLuigi;
+    }
+    
     
     }
 
