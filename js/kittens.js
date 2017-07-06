@@ -16,6 +16,10 @@ var RIGHT_ARROW_CODE = 39;
 // These two constants allow us to DRY
 var MOVE_LEFT = 'left';
 var MOVE_RIGHT = 'right';
+var SPACE_BAR = 32;
+
+var audio = new Audio("bowser_song.mp3");
+audio.play();
 
 // Preload game images
 var images = {};
@@ -189,6 +193,19 @@ class Engine {
             this.ctx.font = 'bold 30px Impact';
             this.ctx.fillStyle = '#ffffff';
             this.ctx.fillText(this.score + ' GAME OVER', 5, 30);
+            this.ctx.fillText('Bowser: Toobad!!!', 5, 150);
+            this.ctx.fillText('Hit space bar to try again.', 5, 200);
+            document.addEventListener('keydown', e => {
+                if(e.keyCode === SPACE_BAR){
+                    
+                    window.location.reload();
+                    
+                    // this.start();
+                    // this.player = new Player();
+                    // this.enemies = [];
+                    // this.setupEnemies();
+                }
+            });
         }
         else {
             // If player is not dead, then draw the score
@@ -213,10 +230,14 @@ class Engine {
                 && this.player.x === this.enemies[i].x
                 && this.enemies[i].y + ENEMY_HEIGHT - 20 > this.player.y)
                 {
+                    var audio = new Audio("mario_dead.mp3");
+                    audio.play();
+                
                     dead = true
                 }
         }
         return dead;
+        
     }
 }
 
