@@ -280,7 +280,10 @@ class Engine {
             this.score += 5000;
         }
         
-        
+        // Check if hardmore should be enabled
+        if (this.hardMode()) {
+            MAX_ENEMIES = 4;
+        }
         
     }
 
@@ -316,6 +319,17 @@ class Engine {
         }
         return collect;
     }
+    
+    hardMode() {
+        var increaseDifficulty = false;
+        if (this.score > 1000000 && this.score < 1050000) {
+            var audio = new Audio("bowser_laugh.mp3");
+            audio.play();
+            increaseDifficulty = true;
+        }
+        return increaseDifficulty;
+    }
+    
     }
 
 // This section will start the game
