@@ -248,9 +248,9 @@ class Engine {
             // If they are dead, then it's game over!
             this.ctx.font = 'bold 30px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText("Points :" + this.score, 30, 30);
-            this.ctx.fillText('Bowser: Toobad!!!', 5, 150);
-            this.ctx.fillText('Hit space bar to try again.', 5, 200);
+            this.ctx.fillText("Points: " + this.score, 30, 30);
+            this.ctx.fillText('Hit "space bar"', 150, 150);
+            this.ctx.fillText('to try again!', 160, 200);
             document.addEventListener('keydown', e => {
                 if(e.keyCode === SPACE_BAR){
                     
@@ -287,8 +287,7 @@ class Engine {
         
         //Check if luigi should be unlocked
         if (this.unlockLuigi()) {
-                this.player.sprite = images['luigi.png'];
-                this.player.render(this.ctx);
+                this.player.sprite = images['luigi.png']; 
         }
         
     }
@@ -338,7 +337,7 @@ class Engine {
     
     unlockLuigi() {
         var unlockedLuigi = false;
-        if (this.score > 2000000 && this.score < 2020000) {
+        if (this.score > 500000 && this.score < 520000) {
             var audio = new Audio("luigi_voice.mp3");
             audio.play();
             unlockedLuigi = true;
