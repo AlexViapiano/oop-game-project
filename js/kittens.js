@@ -24,7 +24,7 @@ audio.play();
 
 // Preload game images
 var images = {};
-['mario.png', 'luigi.png', 'castle.png', 'Thwomp.png', 'yoshi_coin.png'].forEach(imgName => {
+['mario.png', 'luigi.png', 'castle.png', 'Thwomp.png', 'star.png', 'yoshi_coin.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -32,16 +32,12 @@ var images = {};
 
 
 
-
-
 // This section is where you will be doing most of your coding
 
 class Entity {
-    
     render(ctx) {
         ctx.drawImage(this.sprite, this.x, this.y);
     }
-    
 }
 
 class Enemy extends Entity {
@@ -52,6 +48,22 @@ class Enemy extends Entity {
         this.sprite = images['Thwomp.png'];
 
         // Each enemy should have a different speed
+        this.speed = Math.random() / 2 + 0.25;
+    }
+
+    update(timeDiff) {
+        this.y = this.y + timeDiff * this.speed;
+    }
+}
+
+class Star extends Entity {
+    constructor(xPos) {
+        super();
+        this.x = xPos;
+        this.y = -ENEMY_HEIGHT;
+        this.sprite = images['star.png'];
+
+        // Each star should have a different speed
         this.speed = Math.random() / 2 + 0.25;
     }
 
@@ -113,6 +125,8 @@ class Engine {
         this.setupEnemies();
         // Setup coin, make sure there is always one
         this.setupCoin();
+        // Setup star, make sure there is always one
+        this.setupStar();
 
         // Setup the <canvas> element where we will be drawing
         var canvas = document.createElement('canvas');
@@ -134,51 +148,65 @@ class Engine {
         if (!this.enemies) {
             this.enemies = [];
         }
-
         while (this.enemies.filter(e => !!e).length < MAX_ENEMIES) {
             this.addEnemy();
         }
     }
     
 
-    // This method finds a random spot where there is no enemy, and puts one in there
+    // Puts enemy in empty lane
     addEnemy() {
         var enemySpots = GAME_HEIGHT / ENEMY_WIDTH;
 
         var enemySpot;
         // Keep looping until we find a free enemy spot at random
-        while (!enemySpot && this.enemies[enemySpot]) {
+        while (enemySpot === undefined && this.enemies[enemySpot]) {
             enemySpot = Math.floor(Math.random() * enemySpots);
         }
-
         this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH);
+    }
+    
+    setupStar() {
+        if (!this.star) {
+            this.star = [];
+        }
+        while (this.star.filter(e => !!e).length < MAX_COINS) {
+            this.addStar();
+        }
+    }
+    
+    
+    addStar() {
+        var starSpots = GAME_HEIGHT / ENEMY_WIDTH;
+        var starSpot;
+        while (!starSpot && this.star[starSpot]) {
+            starSpot = Math.floor(Math.random() * starSpots);
+        }
+        this.star[starSpot] = new Star(starSpot * ENEMY_WIDTH);
     }
     
     setupCoin() {
         if (!this.coin) {
             this.coin = [];
         }
-
         while (this.coin.filter(e => !!e).length < MAX_COINS) {
             this.addCoin();
         }
     }
-    
-        addCoin() {
-        var coinSpots = GAME_HEIGHT / ENEMY_WIDTH;
 
+    
+    addCoin() {
+        var coinSpots = GAME_HEIGHT / ENEMY_WIDTH;
         var coinSpot;
-        // Keep looping until we find a free enemy spot at random
         while (!coinSpot && this.coin[coinSpot]) {
             coinSpot = Math.floor(Math.random() * coinSpots);
         }
-
         this.coin[coinSpot] = new Coin(coinSpot * ENEMY_WIDTH);
     }
     
-    // This method kicks off the game
     start() {
         this.score = 0;
+        this.starShield = 0;
         this.lastFrame = Date.now();
 
         // Listen for keyboard left/right and update the player
@@ -195,20 +223,22 @@ class Engine {
         this.gameLoop();
     }
 
-    /*
-    This is the core of the game engine. The `gameLoop` function gets called ~60 times per second
+    /*This is the core of the game engine. The `gameLoop` function gets called ~60 times per second
     During each execution of the function, we will update the positions of all game entities
     It's also at this point that we will check for any collisions between the game entities
     Collisions will often indicate either a player death or an enemy kill
 
     In order to allow the game objects to self-determine their behaviors, gameLoop will call the `update` method of each entity
     To account for the fact that we don't always have 60 frames per second, gameLoop will send a time delta argument to `update`
-    You should use this parameter to scale your update appropriately
-     */
+    You should use this parameter to scale your update appropriately*/
+     
+    
+     
     gameLoop() {
         // Check how long it's been since last frame
         var currentFrame = Date.now();
         var timeDiff = currentFrame - this.lastFrame;
+
 
         // Increase the score!
         this.score += timeDiff;
@@ -218,11 +248,15 @@ class Engine {
         
         // Call update on coin
         this.coin.forEach(coin => coin.update(timeDiff));
+        
+        // Call update on star
+        this.star.forEach(star => star.update(timeDiff));
 
         // Draw everything!
         this.ctx.drawImage(images['castle.png'], 0, 0); // draw the star bg
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
         this.coin.forEach(coin => coin.render(this.ctx)); // draw the coin
+        this.star.forEach(star => star.render(this.ctx)); // draw the star
         this.player.render(this.ctx); // draw the player
         
 
@@ -233,15 +267,26 @@ class Engine {
             }
         });
         
-        // Check if any coin should die
+        this.setupEnemies();
+        
+        // Check if any coin should disappear
         this.coin.forEach((coin, coinIdx) => {
             if (coin.y > GAME_HEIGHT) {
                 delete this.coin[coinIdx];
             }
         });
+    
         
-        this.setupEnemies();
         this.setupCoin();
+        
+        // Check if any star should disappear
+        this.star.forEach((star, starIdx) => {
+            if (star.y > GAME_HEIGHT) {
+                delete this.star[starIdx];
+            }
+        });
+    
+        this.setupStar();
 
         // Check if player is dead
         if (this.isPlayerDead()) {
@@ -265,9 +310,11 @@ class Engine {
         }
         else {
             // If player is not dead, then draw the score
-            this.ctx.font = 'bold 30px Impact';
+            this.ctx.font = 'bold 20px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText("Points: " + this.score, 30, 30);
+            this.ctx.fillText("Star Shield: " + this.starShield, 30, 30);
+            this.ctx.fillText("Points: " + this.score, 30, 60);
+
 
             // Set the time marker and redraw
             this.lastFrame = Date.now();
@@ -279,6 +326,12 @@ class Engine {
             // If collected coin, increase points!
             this.score += 5000;
         }
+        
+        // Check if starShield should be added
+        if (this.starCollect()) {
+            this.starShield += 25;
+        }
+        
         
         // Check if hardmore should be enabled
         if (this.hardMode()) {
@@ -301,9 +354,13 @@ class Engine {
                 && this.player.x === this.enemies[i].x
                 && this.enemies[i].y + ENEMY_HEIGHT - 20 > this.player.y)
                 {
+                    this.starShield -= 1000;
+                    
+                    if (this.starShield <= 0) {
                     var audio = new Audio("mario_dead.mp3");
                     audio.play();
                     dead = true
+                    }
                 }
         }
         return dead;
@@ -325,9 +382,25 @@ class Engine {
         return collect;
     }
     
+    //return true if player touching star
+    starCollect() {
+        var collect = false;
+        for (var i=0; i<this.star.length; i++) {
+            
+            if (this.star[i] 
+                && this.player.x === this.star[i].x
+                && this.star[i].y + ENEMY_HEIGHT - 20 > this.player.y
+                && this.starShield <= 5000)
+                {
+                    collect = true;
+                }
+        }
+        return collect;
+    }
+    
     hardMode() {
         var increaseDifficulty = false;
-        if (this.score > 1000000 && this.score < 1020000) {
+        if (this.score > 1000000 && this.score < 1010000) {
             var audio = new Audio("bowser_laugh.mp3");
             audio.play();
             increaseDifficulty = true;
@@ -337,7 +410,7 @@ class Engine {
     
     unlockLuigi() {
         var unlockedLuigi = false;
-        if (this.score > 500000 && this.score < 520000) {
+        if (this.score > 1500000 && this.score < 1510000) {
             var audio = new Audio("luigi_voice.mp3");
             audio.play();
             unlockedLuigi = true;
@@ -345,8 +418,7 @@ class Engine {
         return unlockedLuigi;
     }
     
-    
-    }
+}
 
 // This section will start the game
 var gameEngine = new Engine(document.getElementById('app'));
