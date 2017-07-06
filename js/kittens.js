@@ -24,7 +24,7 @@ audio.play();
 
 // Preload game images
 var images = {};
-['mario.png', 'luigi.png', 'castle.png', 'Thwomp.png', 'star.png', 'yoshi_coin.png'].forEach(imgName => {
+['mario.png', 'luigi.png', 'castle.png', 'Thwomp.png', 'star.png', 'yoshi_coin.png', 'link.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -291,11 +291,20 @@ class Engine {
         // Check if player is dead
         if (this.isPlayerDead()) {
             // If they are dead, then it's game over!
-            this.ctx.font = 'bold 30px Impact';
+            this.ctx.font = 'bold 20px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText("Points: " + this.score, 30, 30);
-            this.ctx.fillText('Hit "space bar"', 150, 150);
-            this.ctx.fillText('to try again!', 160, 200);
+            this.ctx.fillText("Star Shield: " + this.starShield + "/5000", 30, 30);
+            this.ctx.fillText("Points: " + this.score, 30, 60);
+            this.ctx.fillText('Hit "space bar"', 180, 180);
+            this.ctx.fillText('to try again!', 180, 200);
+            
+            if (this.score < 1000000) {
+                this.ctx.fillText('Bowser: You suck!', 180, 130)
+            }
+            else {
+                this.ctx.fillText('Bowser: Toobad!!!', 180, 130)
+            }
+            
             document.addEventListener('keydown', e => {
                 if(e.keyCode === SPACE_BAR){
                     
@@ -312,7 +321,7 @@ class Engine {
             // If player is not dead, then draw the score
             this.ctx.font = 'bold 20px Impact';
             this.ctx.fillStyle = '#ffffff';
-            this.ctx.fillText("Star Shield: " + this.starShield, 30, 30);
+            this.ctx.fillText("Star Shield: " + this.starShield + "/5000", 30, 30);
             this.ctx.fillText("Points: " + this.score, 30, 60);
 
 
@@ -333,14 +342,24 @@ class Engine {
         }
         
         
-        // Check if hardmore should be enabled
+        // Check if hardmode should be enabled
         if (this.hardMode()) {
             MAX_ENEMIES = 4;
+        }
+        
+        // Check if impossible mode should be enabled
+        if (this.impossibleMode()) {
+            MAX_ENEMIES = 5;
         }
         
         //Check if luigi should be unlocked
         if (this.unlockLuigi()) {
                 this.player.sprite = images['luigi.png']; 
+        }
+        
+        //Check if link should be unlocked
+        if (this.unlockLink()) {
+                this.player.sprite = images['link.png']; 
         }
         
     }
@@ -367,55 +386,66 @@ class Engine {
     }
 
     coinCollect() {
-        var collect = false;
         for (var i=0; i<this.coin.length; i++) {
-            
             if (this.coin[i] 
                 && this.player.x === this.coin[i].x
                 && this.coin[i].y + ENEMY_HEIGHT - 20 > this.player.y)
                 {
                     var audio = new Audio("coin_collect.mp3");
                     audio.play();
-                    collect = true;
+                    return true;
                 }
         }
-        return collect;
+        return false;
     }
     
-    //return true if player touching star
     starCollect() {
-        var collect = false;
         for (var i=0; i<this.star.length; i++) {
-            
             if (this.star[i] 
                 && this.player.x === this.star[i].x
                 && this.star[i].y + ENEMY_HEIGHT - 20 > this.player.y
                 && this.starShield <= 5000)
                 {
-                    collect = true;
+                    return true;
                 }
         }
-        return collect;
+        return false;
     }
     
     hardMode() {
-        var increaseDifficulty = false;
         if (this.score > 1000000 && this.score < 1010000) {
             var audio = new Audio("bowser_laugh.mp3");
             audio.play();
-            increaseDifficulty = true;
+            return true;
         }
-        return increaseDifficulty;
+        return false;
     }
     
     unlockLuigi() {
-        var unlockedLuigi = false;
         if (this.score > 1500000 && this.score < 1510000) {
             var audio = new Audio("luigi_voice.mp3");
             audio.play();
-            unlockedLuigi = true;
+            return true;
         }
-        return unlockedLuigi;
+        return false;
+    }
+    
+    impossibleMode() {
+        if (this.score > 2000000 && this.score < 2010000) {
+            var audio = new Audio("bowser_laugh.mp3");
+            audio.play();
+            return true;
+        }
+        return false;
+    }
+    
+    unlockLink() {
+        if (this.score > 2500000 && this.score < 2510000) {
+            var audio = new Audio("star_song2.mp3");
+            audio.play();
+            return true;
+        }
+        return false;
     }
     
 }
