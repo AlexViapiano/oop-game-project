@@ -5,6 +5,7 @@ var GAME_HEIGHT = 500;
 var ENEMY_WIDTH = 75;
 var ENEMY_HEIGHT = 156;
 var MAX_ENEMIES = 3;
+var MAX_COINS = 1;
 
 var PLAYER_WIDTH = 75;
 var PLAYER_HEIGHT = 54;
@@ -23,7 +24,7 @@ audio.play();
 
 // Preload game images
 var images = {};
-['mario.png', 'castle.png', 'Thwomp.png'].forEach(imgName => {
+['mario.png', 'castle.png', 'Thwomp.png', 'yoshi_coin.png'].forEach(imgName => {
     var img = document.createElement('img');
     img.src = 'images/' + imgName;
     images[imgName] = img;
@@ -51,6 +52,22 @@ class Enemy extends Entity {
         this.sprite = images['Thwomp.png'];
 
         // Each enemy should have a different speed
+        this.speed = Math.random() / 2 + 0.25;
+    }
+
+    update(timeDiff) {
+        this.y = this.y + timeDiff * this.speed;
+    }
+}
+
+class Coin extends Entity {
+        constructor(xPos) {
+        super();
+        this.x = xPos;
+        this.y = -ENEMY_HEIGHT;
+        this.sprite = images['yoshi_coin.png'];
+
+        // Each coin should have a different speed
         this.speed = Math.random() / 2 + 0.25;
     }
 
@@ -94,6 +111,8 @@ class Engine {
 
         // Setup enemies, making sure there are always three
         this.setupEnemies();
+        // Setup coin, make sure there is always one
+        this.setupCoin();
 
         // Setup the <canvas> element where we will be drawing
         var canvas = document.createElement('canvas');
@@ -120,6 +139,7 @@ class Engine {
             this.addEnemy();
         }
     }
+    
 
     // This method finds a random spot where there is no enemy, and puts one in there
     addEnemy() {
@@ -133,7 +153,29 @@ class Engine {
 
         this.enemies[enemySpot] = new Enemy(enemySpot * ENEMY_WIDTH);
     }
+    
+    setupCoin() {
+        if (!this.coin) {
+            this.coin = [];
+        }
 
+        while (this.coin.filter(e => !!e).length < MAX_COINS) {
+            this.addCoin();
+        }
+    }
+    
+        addCoin() {
+        var coinSpots = GAME_HEIGHT / ENEMY_WIDTH;
+
+        var coinSpot;
+        // Keep looping until we find a free enemy spot at random
+        while (!coinSpot && this.coin[coinSpot]) {
+            coinSpot = Math.floor(Math.random() * coinSpots);
+        }
+
+        this.coin[coinSpot] = new Coin(coinSpot * ENEMY_WIDTH);
+    }
+    
     // This method kicks off the game
     start() {
         this.score = 0;
@@ -173,11 +215,16 @@ class Engine {
 
         // Call update on all enemies
         this.enemies.forEach(enemy => enemy.update(timeDiff));
+        
+        // Call update on coin
+        this.coin.forEach(coin => coin.update(timeDiff));
 
         // Draw everything!
         this.ctx.drawImage(images['castle.png'], 0, 0); // draw the star bg
         this.enemies.forEach(enemy => enemy.render(this.ctx)); // draw the enemies
+        this.coin.forEach(coin => coin.render(this.ctx)); // draw the coin
         this.player.render(this.ctx); // draw the player
+        
 
         // Check if any enemies should die
         this.enemies.forEach((enemy, enemyIdx) => {
@@ -185,7 +232,16 @@ class Engine {
                 delete this.enemies[enemyIdx];
             }
         });
+        
+        // Check if any coin should die
+        this.coin.forEach((coin, coinIdx) => {
+            if (coin.y > GAME_HEIGHT) {
+                delete this.coin[coinIdx];
+            }
+        });
+        
         this.setupEnemies();
+        this.setupCoin();
 
         // Check if player is dead
         if (this.isPlayerDead()) {
@@ -217,13 +273,20 @@ class Engine {
             this.lastFrame = Date.now();
             requestAnimationFrame(this.gameLoop);
         }
+        
+        // Check if player collected coin
+        if (this.coinCollect()) {
+            // If collected coin, increase points!
+            this.score += 5000;
+        }
+        
+        
+        
     }
 
     isPlayerDead() {
         // TODO: fix this function!
-        
         var dead = false;
-        
         for (var i=0; i<this.enemies.length; i++) {
             
             if (this.enemies[i] 
@@ -232,15 +295,28 @@ class Engine {
                 {
                     var audio = new Audio("mario_dead.mp3");
                     audio.play();
-                
                     dead = true
                 }
         }
         return dead;
-        
     }
-}
 
+    coinCollect() {
+        var collect = false;
+        for (var i=0; i<this.coin.length; i++) {
+            
+            if (this.coin[i] 
+                && this.player.x === this.coin[i].x
+                && this.coin[i].y + ENEMY_HEIGHT - 20 > this.player.y)
+                {
+                    var audio = new Audio("coin_collect.mp3");
+                    audio.play();
+                    collect = true;
+                }
+        }
+        return collect;
+    }
+    }
 
 // This section will start the game
 var gameEngine = new Engine(document.getElementById('app'));
